@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Providers } from "./providers";
 import Nav from "./components/Nav/Nav";
+import { KlasterProvider } from "@/utils/KlasterContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,8 +32,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <Nav />
-          <main className="flex-grow  pt-[100px]  ">{children}</main>
+          <KlasterProvider>
+            <Nav />
+            <main className="flex-grow  pt-[100px]  ">{children}</main>
+          </KlasterProvider>
         </Providers>
       </body>
     </html>
