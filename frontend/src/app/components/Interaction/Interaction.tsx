@@ -4,70 +4,27 @@ import React, { useState } from "react";
 import { ethers } from "ethers";
 import { fetchABI, getContractInstance } from "@/utils/contract";
 import styles from "./Interaction.module.css"; // Ensure you have a CSS module for styling
+import { useKlaster } from "@/utils/KlasterContext";
+import {
+  buildMultichainReadonlyClient,
+  buildTokenMapping,
+  MultichainTokenMapping,
+  MultichainClient,
+  deployment,
+} from "klaster-sdk";
 
-// async function setupKluster() {
-//     const account = privateKeyToAccount(
-//       "0x230d41177fafa38ae07d56401f78a9d86e546eb5d3874487e18296344f7a725f"
-//     );
-
-//     const klaster = await initKlaster({
-//       accountInitData: loadBiconomyV2Account({
-//         owner: account.address,
-//       }),
-//       nodeUrl: klasterNodeHost.default,
-//     });
-
-//     console.log(klaster.account.uniqueAddresses);
-
-//     const mcClient = buildMultichainReadonlyClient(
-//       [
-//         optimism,
-//         base,
-//         polygon,
-//         arbitrum,
-//         scroll,
-//         optimismSepolia,
-//         arbitrumSepolia,
-//       ].map((x) => {
-//         return {
-//           chainId: x.id,
-//           rpcUrl: x.rpcUrls.default.http[0],
-//         };
-//       })
-//     );
-
-//     const mcUSDC = buildTokenMapping([
-//       deployment(optimism.id, "0x0b2c639c533813f4aa9d7837caf62653d097ff85"),
-//       deployment(arbitrum.id, "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
-//     ]);
-
-//     const intersectTokenAndClients = (
-//       token: MultichainTokenMapping,
-//       mcClient: MultichainClient
-//     ) => {
-//       return token.filter((deployment) =>
-//         mcClient.chainsRpcInfo
-//           .map((info) => info.chainId)
-//           .includes(deployment.chainId)
-//       );
-//     };
-
-//     // Store the intersection of the Klaster provided token and the chains your project is using.
-//     const mUSDC = intersectTokenAndClients(mcUSDC, mcClient);
-//     const uBalance = await mcClient.getUnifiedErc20Balance({
-//       tokenMapping: mUSDC,
-//       account: klaster.account,
-//     });
-
-//     console.log(uBalance.balance);
-//     console.log(uBalance.breakdown); // Breakdown of balances across each separate blockchain
-
-//     // The decimals of the token. In order for tokenMapping to be created,
-//     // all instances must have the same number of decimals.
-//     // uBalance.decimals;
-//   }
+import {
+  arbitrum,
+  base,
+  optimism,
+  polygon,
+  scroll,
+  optimismSepolia,
+  arbitrumSepolia,
+} from "viem/chains";
 
 const Interaction: React.FC = () => {
+  const { klaster } = useKlaster();
   const [contractAddress, setContractAddress] = useState<string>("");
   const [selectedChain, setSelectedChain] = useState<string>("Sepolia");
   const [abi, setAbi] = useState<any[]>([]);
@@ -164,8 +121,56 @@ const Interaction: React.FC = () => {
     }
   };
 
+  async function setupKluster() {
+    console.log(klaster.account.uniqueAddresses);
+
+    const mcClient = buildMultichainReadonlyClient(
+      [
+        optimism,
+        base,
+        polygon,
+        arbitrum,
+        scroll,
+        optimismSepolia,
+        arbitrumSepolia,
+      ].map((x) => {
+        return {
+          chainId: x.id,
+          rpcUrl: x.rpcUrls.default.http[0],
+        };
+      })
+    );
+
+    const mcUSDC = buildTokenMapping([
+      deployment(optimism.id, "0x0b2c639c533813f4aa9d7837caf62653d097ff85"),
+      deployment(arbitrum.id, "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
+    ]);
+
+    const intersectTokenAndClients = (
+      token: MultichainTokenMapping,
+      mcClient: MultichainClient
+    ) => {
+      return token.filter((deployment) =>
+        mcClient.chainsRpcInfo
+          .map((info) => info.chainId)
+          .includes(deployment.chainId)
+      );
+    };
+
+    // Store the intersection of the Klaster provided token and the chains your project is using.
+    const mUSDC = intersectTokenAndClients(mcUSDC, mcClient);
+    const uBalance = await mcClient.getUnifiedErc20Balance({
+      tokenMapping: mUSDC,
+      account: klaster.account,
+    });
+
+    console.log(uBalance.balance);
+    console.log(uBalance.breakdown); // Breakdown of balances across each separate blockchain
+  }
+
   return (
     <div className={styles.container}>
+      <button onClick={setupKluster}>klas</button>
       <h1 className={styles.title}>NFT Contract Interaction</h1>
       <input
         className={styles.inputElement}
