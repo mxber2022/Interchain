@@ -1,10 +1,6 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import {
-  initKlaster,
-  loadBiconomyV2Account,
-  klasterNodeHost,
-} from "klaster-sdk";
+import { initKlaster, loadBicoV2Account, klasterNodeHost } from "klaster-sdk";
 import { useAccount } from "wagmi";
 import { Address } from "viem";
 
@@ -29,7 +25,7 @@ export const KlasterProvider = ({
       console.log("useEffect triggered with address: ", address);
       const initializeKlaster = async () => {
         try {
-          const accountInitData = loadBiconomyV2Account({
+          const accountInitData = loadBicoV2Account({
             owner: address as Address,
           });
 

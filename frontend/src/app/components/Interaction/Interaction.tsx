@@ -11,8 +11,16 @@ import {
   MultichainTokenMapping,
   MultichainClient,
   deployment,
+  encodeBridgingOps,
+  rawTx,
+  getTokenAddressForChainId,
+  buildItx,
+  singleTx,
 } from "klaster-sdk";
-
+import { parseUnits, encodeFunctionData, erc20Abi } from "viem";
+import { liFiBrigePlugin } from "./Plugin";
+import { acrossBridgePlugin } from "./across-bridge-plugin";
+import { nitroBridgePlugin } from "./nitro-bridge-plugin";
 import {
   arbitrum,
   base,
@@ -21,7 +29,10 @@ import {
   scroll,
   optimismSepolia,
   arbitrumSepolia,
+  sepolia,
+  baseSepolia,
 } from "viem/chains";
+import { useWalletClient } from "wagmi";
 
 const Interaction: React.FC = () => {
   const { klaster } = useKlaster();
@@ -33,6 +44,7 @@ const Interaction: React.FC = () => {
     useState<ethers.providers.Web3Provider | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [inputValues, setInputValues] = useState<{ [key: string]: any }>({});
+  const { data: signer } = useWalletClient();
 
   const chains = [
     { name: "Ethereum", api: "https://api.etherscan.io/api" },
@@ -122,7 +134,7 @@ const Interaction: React.FC = () => {
   };
 
   async function setupKluster() {
-    console.log(klaster.account.uniqueAddresses);
+    console.log(klaster.account.uniqueAddresses[0]);
 
     const mcClient = buildMultichainReadonlyClient(
       [
@@ -133,6 +145,8 @@ const Interaction: React.FC = () => {
         scroll,
         optimismSepolia,
         arbitrumSepolia,
+        baseSepolia,
+        sepolia,
       ].map((x) => {
         return {
           chainId: x.id,
@@ -141,9 +155,16 @@ const Interaction: React.FC = () => {
       })
     );
 
+    // const mcUSDC = buildTokenMapping([
+    //   deployment(optimism.id, "0x0b2c639c533813f4aa9d7837caf62653d097ff85"),
+    //   deployment(arbitrum.id, "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
+    // ]);
+
     const mcUSDC = buildTokenMapping([
       deployment(optimism.id, "0x0b2c639c533813f4aa9d7837caf62653d097ff85"),
+      deployment(base.id, "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
       deployment(arbitrum.id, "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"),
+      deployment(polygon.id, "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"),
     ]);
 
     const intersectTokenAndClients = (
@@ -166,6 +187,47 @@ const Interaction: React.FC = () => {
 
     console.log(uBalance.balance);
     console.log(uBalance.breakdown); // Breakdown of balances across each separate blockchain
+
+    const bridgingOps = await encodeBridgingOps({
+      tokenMapping: mUSDC,
+      account: klaster.account,
+      amount: uBalance.balance, // Don't send entire balance
+      bridgePlugin: acrossBridgePlugin,
+      client: mcClient,
+      destinationChainId: polygon.id,
+      unifiedBalance: uBalance,
+    });
+
+    console.log(bridgingOps);
+    const recipient = "0xC881EE0FB15933E15cBD55338f01B2BC92D5532E";
+    const destChainTokenAddress = getTokenAddressForChainId(mUSDC, polygon.id)!;
+    const sendERC20Op = rawTx({
+      gasLimit: 100000n,
+      to: destChainTokenAddress,
+      data: encodeFunctionData({
+        abi: erc20Abi,
+        functionName: "transfer",
+        args: [recipient, bridgingOps.totalReceivedOnDestination],
+      }),
+    });
+
+    const iTx = buildItx({
+      steps: bridgingOps.steps.concat(singleTx(polygon.id, sendERC20Op)),
+      feeTx: klaster.encodePaymentFee(base.id, "USDC"),
+    });
+
+    const quote = await klaster.getQuote(iTx);
+    console.log("quote: ", quote.itxHash);
+
+    const signed = await signer?.signMessage({
+      message: {
+        raw: quote.itxHash,
+      },
+      account: klaster.account.uniqueAddresses[0],
+    });
+
+    const result = await klaster.execute(quote, signed);
+    console.log("result: ", result);
   }
 
   return (
