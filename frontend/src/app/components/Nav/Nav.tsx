@@ -16,9 +16,7 @@ function Nav() {
         <div className={styles.nav__left}>
           <div>
             <Link href="/" style={{ color: "black", textDecoration: "none" }}>
-              <div className={`${styles.nav__logo} rajdhani-bold`}>
-                EMERGENCY
-              </div>
+              <div className={`${styles.nav__logo} rajdhani-bold`}>KLAS</div>
             </Link>
           </div>
 
