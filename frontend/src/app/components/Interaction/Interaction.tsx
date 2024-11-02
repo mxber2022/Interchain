@@ -194,55 +194,44 @@ const Interaction: React.FC = () => {
       {abi.length > 0 && (
         <div>
           <h2>Functions</h2>
-          {abi.map((item: any) =>
-            item.type === "function" &&
-            (item.stateMutability === "nonpayable" ||
-              item.stateMutability === "payable") ? (
-              <div key={item.name} className={styles.functionBlock}>
-                <h3>{item.name}</h3>
+          <div className={styles.functionsContainer}>
+            {abi.map((item: any) =>
+              item.type === "function" &&
+              item.stateMutability === "nonpayable" ? (
+                <div key={item.name} className={styles.functionBlock}>
+                  <h3>{item.name}</h3>
 
-                {/* Dynamically render input fields for function arguments */}
-                {item.inputs.length > 0 && (
-                  <div>
-                    {item.inputs.map((input: any) => (
-                      <input
-                        key={input.name}
-                        className={styles.inputElement}
-                        type="text"
-                        placeholder={`${input.name} (${input.type})`}
-                        onChange={(e) =>
-                          handleInputChange(
-                            item.name,
-                            input.name,
-                            e.target.value
-                          )
-                        }
-                      />
-                    ))}
+                  {/* Dynamically render input fields for function arguments */}
+                  {item.inputs.length > 0 && (
+                    <div>
+                      {item.inputs.map((input: any) => (
+                        <input
+                          key={input.name}
+                          type="text"
+                          placeholder={`${input.name} (${input.type})`}
+                          onChange={(e) =>
+                            handleInputChange(
+                              item.name,
+                              input.name,
+                              e.target.value
+                            )
+                          }
+                          className={styles.inputElement}
+                        />
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Input for value if the function is payable */}
-                    {item.stateMutability === "payable" && (
-                      <input
-                        className={styles.inputElement}
-                        type="text"
-                        placeholder="Value in ETH"
-                        onChange={(e) =>
-                          handleInputChange(item.name, "value", e.target.value)
-                        }
-                      />
-                    )}
-                  </div>
-                )}
-
-                <button
-                  className={styles.button}
-                  onClick={() => handleFunctionCall(item.name, item.inputs)}
-                >
-                  Call {item.name}
-                </button>
-              </div>
-            ) : null
-          )}
+                  <button
+                    onClick={() => handleFunctionCall(item.name, item.inputs)}
+                    className={styles.button}
+                  >
+                    {item.name}
+                  </button>
+                </div>
+              ) : null
+            )}
+          </div>
         </div>
       )}
     </div>
