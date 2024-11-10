@@ -21,7 +21,9 @@ function Nav() {
         <div className={styles.nav__left}>
           <div>
             <Link href="/" style={{ color: "black", textDecoration: "none" }}>
-              <div className={`${styles.nav__logo} rajdhani-bold`}>KLAS</div>
+              <div className={`${styles.nav__logo} rajdhani-bold`}>
+                TokenFlex
+              </div>
             </Link>
           </div>
 
