@@ -1,6 +1,6 @@
 # **TokenFlex**
 
-Seamless multi-chain contract interaction platform with support for custom gas tokens, built using Klaster.
+Chain abstracted contract interaction platform with support for custom gas tokens, built using Klaster.
 
 ## Features
 
