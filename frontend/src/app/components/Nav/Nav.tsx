@@ -6,9 +6,14 @@ import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
+import { useKlaster } from "@/utils/KlasterContext";
 
 function Nav() {
   const { address, isConnected } = useAccount();
+  const { klaster } = useKlaster();
+
+  const uniqueAddress =
+    klaster?.account?.uniqueAddresses?.values().next().value || "Loading...";
 
   return (
     <nav className={styles.nav}>
@@ -27,7 +32,9 @@ function Nav() {
                 color: "black",
                 textDecoration: "none",
               }}
-            ></Link>
+            >
+              {" "}
+            </Link>
           </div>
 
           <div>
@@ -37,7 +44,9 @@ function Nav() {
                 color: "black",
                 textDecoration: "none",
               }}
-            ></Link>
+            >
+              AAWallet: {uniqueAddress}
+            </Link>
           </div>
         </div>
         <div className={styles.nav__right}>

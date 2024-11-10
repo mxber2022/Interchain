@@ -46,6 +46,33 @@ const Interaction: React.FC = () => {
   const [inputValues, setInputValues] = useState<{ [key: string]: any }>({});
   const { data: signer } = useWalletClient();
 
+  const [selectedFeeToken, setSelectedFeeToken] = useState<string>("USDC"); // State for fee token
+  const [selectedBlockchain, setSelectedBlockchain] = useState<string>(
+    base.id.toString()
+  );
+
+  const feeTokens = [
+    { name: "USDC", symbol: "USDC" },
+    { name: "ETH", symbol: "ETH" },
+    // Add more supported tokens if needed
+  ];
+
+  const blockchains = [
+    { name: "Base", id: base.id },
+    { name: "Polygon", id: polygon.id },
+    { name: "Ethereum", id: sepolia.id },
+    { name: "scroll", id: scroll.id },
+    // Add more supported blockchains as needed
+  ];
+
+  const handleFeeTokenChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedFeeToken(e.target.value);
+  };
+
+  const handleBlockchainChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedBlockchain(e.target.value);
+  };
+
   const chains = [
     { name: "Ethereum", api: "https://api.etherscan.io/api" },
     { name: "Sepolia", api: "https://api-sepolia.etherscan.io/api" },
@@ -134,7 +161,10 @@ const Interaction: React.FC = () => {
   };
 
   async function setupKluster() {
-    console.log(klaster.account.uniqueAddresses[0]);
+    console.log(
+      "kluster account ",
+      klaster.account.uniqueAddresses.values().next().value
+    );
 
     const mcClient = buildMultichainReadonlyClient(
       [
@@ -213,7 +243,8 @@ const Interaction: React.FC = () => {
 
     const iTx = buildItx({
       steps: bridgingOps.steps.concat(singleTx(polygon.id, sendERC20Op)),
-      feeTx: klaster.encodePaymentFee(base.id, "USDC"),
+      // feeTx: klaster.encodePaymentFee(base.id, "USDC"),
+      feeTx: klaster.encodePaymentFee(selectedBlockchain, selectedFeeToken),
     });
 
     const quote = await klaster.getQuote(iTx);
@@ -230,17 +261,26 @@ const Interaction: React.FC = () => {
     console.log("result: ", result);
   }
 
+  console.log("selectedBlockchain: ", selectedBlockchain);
+  console.log("selectedFeeToken: ", selectedFeeToken);
+
   return (
     <div className={styles.container}>
       <button onClick={setupKluster}>klas</button>
-      <h1 className={styles.title}>NFT Contract Interaction</h1>
+      <h1 className={styles.title}>Interchain Contract Call </h1>
+
       <input
         className={styles.inputElement}
         type="text"
-        placeholder="NFT Contract Address"
+        placeholder="Enter contract address"
         value={contractAddress}
         onChange={(e) => setContractAddress(e.target.value)}
       />
+
+      <button className={styles.button} onClick={handleFetchABI}>
+        Fetch ABI
+      </button>
+
       <select
         className={styles.selectElement}
         onChange={(e) => setSelectedChain(e.target.value)}
@@ -252,15 +292,38 @@ const Interaction: React.FC = () => {
           </option>
         ))}
       </select>
-      <button className={styles.button} onClick={handleFetchABI}>
-        Fetch ABI
-      </button>
+
+      <label htmlFor="feeToken">Choose Fee Token:</label>
+      <select
+        id="feeToken"
+        value={selectedFeeToken}
+        onChange={handleFeeTokenChange}
+      >
+        {feeTokens.map((token) => (
+          <option key={token.symbol} value={token.symbol}>
+            {token.name}
+          </option>
+        ))}
+      </select>
+
+      <label htmlFor="blockchain">Choose Blockchain:</label>
+      <select
+        id="blockchain"
+        value={selectedBlockchain}
+        onChange={handleBlockchainChange}
+      >
+        {blockchains.map((chain) => (
+          <option key={chain.id} value={chain.id}>
+            {chain.name}
+          </option>
+        ))}
+      </select>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       {abi.length > 0 && (
         <div>
-          <h2>Functions</h2>
+          <h2>____________________Contract Functions______________________</h2>
           <div className={styles.functionsContainer}>
             {abi.map((item: any) =>
               item.type === "function" &&
