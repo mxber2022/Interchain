@@ -60,7 +60,7 @@ const Interaction: React.FC = () => {
   const blockchains = [
     { name: "Base", id: base.id },
     { name: "Polygon", id: polygon.id },
-    { name: "Ethereum", id: sepolia.id },
+    { name: "Sepolia", id: sepolia.id },
     { name: "scroll", id: scroll.id },
     // Add more supported blockchains as needed
   ];
