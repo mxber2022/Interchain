@@ -21,6 +21,7 @@ export const KlasterProvider = ({
   console.log("address: ", address);
 
   useEffect(() => {
+    console.log("address fund");
     if (address) {
       console.log("useEffect triggered with address: ", address);
       const initializeKlaster = async () => {
